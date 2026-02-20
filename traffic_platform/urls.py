@@ -21,7 +21,7 @@ from django.http import HttpResponse
 def home(request):
     return HttpResponse("""
         <h1>AI Powered Traffic & Route Optimization Platform</h1>
-        <p>Hello World – initial deployment for T2.</p>
+        <p>Hello World – initial deployment for T2. Class Project.</p>
     """)
 
 urlpatterns = [
