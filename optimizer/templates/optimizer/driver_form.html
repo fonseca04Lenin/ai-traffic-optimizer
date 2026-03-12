@@ -1,0 +1,74 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <div class="sub">Driver profile and vehicle details</div>
+  </div>
+  <a href="{% url 'driver_list' %}" class="btn btn-ghost">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </a>
+</div>
+
+<div style="max-width:560px;">
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="errorlist" style="margin-bottom:14px;">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="{{ form.name.id_for_label }}">Full Name</label>
+          {{ form.name }}
+          {% for err in form.name.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.phone.id_for_label }}">Phone</label>
+          {{ form.phone }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.vehicle_type.id_for_label }}">Vehicle Type</label>
+          {{ form.vehicle_type }}
+          {% for err in form.vehicle_type.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.max_daily_distance.id_for_label }}">Max Daily Distance (miles)</label>
+          {{ form.max_daily_distance }}
+        </div>
+
+        <div class="form-group full" style="flex-direction:row;align-items:center;gap:12px;">
+          {{ form.is_available }}
+          <label for="{{ form.is_available.id_for_label }}" style="text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:500;color:var(--text);">
+            Driver is currently available for assignment
+          </label>
+        </div>
+
+      </div>
+
+      <hr class="divider">
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <a href="{% url 'driver_list' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          {% if driver %}Save Changes{% else %}Add Driver{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

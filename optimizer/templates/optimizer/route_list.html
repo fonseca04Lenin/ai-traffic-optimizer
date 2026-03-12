@@ -1,0 +1,81 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}Routes{% endblock %}
+{% block page_title %}Routes{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Optimized Routes</h1>
+    <div class="sub">All AI-generated route plans</div>
+  </div>
+  <a href="{% url 'route_optimize' %}" class="btn btn-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    New Route
+  </a>
+</div>
+
+{% if routes %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Route</th>
+          <th>Driver</th>
+          <th>Stops</th>
+          <th>Distance</th>
+          <th>Duration</th>
+          <th>Fuel Saved</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for route in routes %}
+        <tr>
+          <td>
+            <a href="{% url 'route_detail' route.pk %}" style="color:var(--cyan);text-decoration:none;font-weight:600;">
+              {{ route.name|default:route }}
+            </a>
+          </td>
+          <td class="muted">{{ route.driver.name|default:"—" }}</td>
+          <td class="mono">{{ route.stop_count }}</td>
+          <td class="mono">{{ route.total_distance_km }} km</td>
+          <td class="mono">{{ route.estimated_duration_mins }} min</td>
+          <td>
+            {% if route.fuel_savings_pct > 0 %}
+            <span class="badge badge-completed">{{ route.fuel_savings_pct }}%</span>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td class="muted">{{ route.created_at|date:"M d, H:i" }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'route_detail' route.pk %}" class="btn btn-ghost btn-sm">View</a>
+              <form method="post" action="{% url 'route_delete' route.pk %}" onsubmit="return confirm('Delete this route?');" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+    </div>
+    <p>No routes yet. <a href="{% url 'route_optimize' %}">Run your first optimization.</a></p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

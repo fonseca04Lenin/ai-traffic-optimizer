@@ -1,0 +1,133 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <div class="sub">Enter the stop details below</div>
+  </div>
+  <a href="{% url 'job_list' %}" class="btn btn-ghost">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </a>
+</div>
+
+<div style="max-width:760px;">
+  <div class="card">
+    <form method="post" id="job-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="errorlist" style="margin-bottom:14px;">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="{{ form.customer_name.id_for_label }}">Customer Name</label>
+          {{ form.customer_name }}
+          {% for err in form.customer_name.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.service_type.id_for_label }}">Service Type</label>
+          {{ form.service_type }}
+          {% for err in form.service_type.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group full">
+          <label for="{{ form.address.id_for_label }}">Address</label>
+          {{ form.address }}
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <button type="button" id="geocode-btn" class="btn btn-ghost btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span id="geocode-label">Locate on map</span>
+            </button>
+            <span class="helptext">Auto-fills coordinates from the address above.</span>
+          </div>
+          {% for err in form.address.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.latitude.id_for_label }}">Latitude <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);">(auto-filled)</span></label>
+          {{ form.latitude }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.longitude.id_for_label }}">Longitude <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);">(auto-filled)</span></label>
+          {{ form.longitude }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.priority.id_for_label }}">Priority</label>
+          {{ form.priority }}
+          {% for err in form.priority.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.driver.id_for_label }}">Assign Driver</label>
+          {{ form.driver }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.time_window_start.id_for_label }}">Window Start</label>
+          {{ form.time_window_start }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.time_window_end.id_for_label }}">Window End</label>
+          {{ form.time_window_end }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.status.id_for_label }}">Status</label>
+          {{ form.status }}
+        </div>
+
+        <div class="form-group full">
+          <label for="{{ form.notes.id_for_label }}">Notes</label>
+          {{ form.notes }}
+        </div>
+
+      </div>
+
+      <hr class="divider">
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <a href="{% url 'job_list' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          {% if job %}Save Changes{% else %}Create Job{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('geocode-btn').addEventListener('click', function() {
+  const addr = document.getElementById('{{ form.address.id_for_label }}').value.trim();
+  const label = document.getElementById('geocode-label');
+  if (!addr) { label.textContent = 'Enter an address first'; setTimeout(() => label.textContent = 'Locate on map', 2000); return; }
+  label.textContent = 'Locating...';
+  fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        document.getElementById('{{ form.latitude.id_for_label }}').value = parseFloat(data[0].lat).toFixed(6);
+        document.getElementById('{{ form.longitude.id_for_label }}').value = parseFloat(data[0].lon).toFixed(6);
+        label.textContent = 'Located';
+      } else {
+        label.textContent = 'Address not found';
+      }
+      setTimeout(() => label.textContent = 'Locate on map', 2500);
+    })
+    .catch(() => { label.textContent = 'Error — try again'; setTimeout(() => label.textContent = 'Locate on map', 2500); });
+});
+</script>
+{% endblock %}

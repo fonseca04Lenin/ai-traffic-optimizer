@@ -1,0 +1,158 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}Optimize Route{% endblock %}
+{% block page_title %}Route Optimizer{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Route Optimizer</h1>
+    <div class="sub">Select stops and the algorithm builds the most efficient path</div>
+  </div>
+  <a href="{% url 'route_list' %}" class="btn btn-ghost">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+    Routes
+  </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 400px;gap:18px;align-items:start;">
+
+  <!-- Map preview -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between;">
+      <span class="card-title" style="padding:0;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Pending Stops
+      </span>
+      <div style="display:flex;gap:14px;font-size:11px;color:var(--text-2);">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;"></span>High</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--cyan);display:inline-block;"></span>Normal</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;"></span>Low</span>
+      </div>
+    </div>
+    <div id="preview-map" style="margin-top:14px;border-radius:0;border:none;height:420px;"></div>
+  </div>
+
+  <!-- Config form -->
+  <div class="card">
+    <div class="card-header" style="margin-bottom:18px;">
+      <span class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Configure
+      </span>
+    </div>
+
+    <form method="post" id="optimize-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="errorlist" style="margin-bottom:12px;">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Route Name</label>
+        {{ form.route_name }}
+        {% for err in form.route_name.errors %}<div class="errorlist">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label>Driver (optional)</label>
+        {{ form.driver }}
+      </div>
+
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Select Stops</label>
+        <div class="helptext" style="margin-bottom:8px;">Stops without GPS are excluded from optimization.</div>
+        {% if form.job_ids.errors %}
+        <div class="errorlist" style="margin-bottom:8px;">
+          {% for err in form.job_ids.errors %}<div>{{ err }}</div>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="check-list" id="job-checklist">
+          {% for job in pending_jobs %}
+          <label class="check-list-item">
+            <input type="checkbox" name="job_ids" value="{{ job.pk }}"
+              {% if form.job_ids.value and job.pk|stringformat:"s" in form.job_ids.value %}checked{% endif %}>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <span class="badge badge-{{ job.priority }}">{{ job.get_priority_display }}</span>
+                <span style="font-weight:600;font-size:13px;">{{ job.customer_name }}</span>
+                {% if not job.has_coords %}<span class="no-gps-warn">No GPS</span>{% endif %}
+              </div>
+              <div class="item-meta">{{ job.address|truncatechars:45 }}</div>
+            </div>
+          </label>
+          {% empty %}
+          <p style="color:var(--text-2);font-size:13px;padding:8px 0;">No pending jobs. <a href="{% url 'job_create' %}" style="color:var(--cyan);">Add some first.</a></p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:7px;margin-bottom:18px;">
+        <button type="button" id="sel-all"  class="btn btn-ghost btn-sm">All</button>
+        <button type="button" id="sel-none" class="btn btn-ghost btn-sm">None</button>
+        <button type="button" id="sel-high" class="btn btn-danger btn-sm">High priority only</button>
+      </div>
+
+      {{ form.depot_lat }}
+      {{ form.depot_lng }}
+
+      <hr class="divider">
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Run Optimization
+      </button>
+    </form>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const map = L.map('preview-map').setView([39.5, -98.35], 4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OSM &copy; Carto', maxZoom: 18
+}).addTo(map);
+
+const jobData = [
+  {% for job in pending_jobs %}{% if job.has_coords %}
+  { lat: {{ job.latitude }}, lng: {{ job.longitude }}, label: "{{ job.customer_name|escapejs }}", priority: "{{ job.priority }}", address: "{{ job.address|truncatechars:48|escapejs }}" },
+  {% endif %}{% endfor %}
+];
+
+const pinColors = { high: '#f5365c', normal: '#00cfff', low: '#00e57a' };
+const pins = [];
+
+jobData.forEach(j => {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:${pinColors[j.priority]};border:1px solid rgba(255,255,255,0.3);box-shadow:0 0 6px ${pinColors[j.priority]}80;"></div>`,
+    iconSize: [10, 10], iconAnchor: [5, 5]
+  });
+  pins.push(L.marker([j.lat, j.lng], { icon }).addTo(map).bindPopup(`<strong>${j.label}</strong><br><small>${j.address}</small>`));
+});
+
+if (pins.length > 0) {
+  map.fitBounds(L.featureGroup(pins).getBounds().pad(0.2));
+}
+
+document.getElementById('sel-all').addEventListener('click', () => {
+  document.querySelectorAll('#job-checklist input[type=checkbox]').forEach(c => c.checked = true);
+});
+document.getElementById('sel-none').addEventListener('click', () => {
+  document.querySelectorAll('#job-checklist input[type=checkbox]').forEach(c => c.checked = false);
+});
+document.getElementById('sel-high').addEventListener('click', () => {
+  document.querySelectorAll('#job-checklist .check-list-item').forEach(item => {
+    const cb = item.querySelector('input[type=checkbox]');
+    cb.checked = item.textContent.includes('High');
+  });
+});
+</script>
+{% endblock %}

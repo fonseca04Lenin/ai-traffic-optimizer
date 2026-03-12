@@ -1,0 +1,194 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}{{ route.name|default:"Route" }}{% endblock %}
+{% block page_title %}Route Detail{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ route.name|default:route }}</h1>
+    <div class="sub">
+      {{ route.stop_count }} stops &middot; {{ route.total_distance_km }} km &middot; {{ route.estimated_duration_mins }} min
+      {% if route.driver %} &middot; {{ route.driver.name }}{% endif %}
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'route_list' %}" class="btn btn-ghost">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+      Routes
+    </a>
+    <form method="post" action="{% url 'route_delete' route.pk %}" onsubmit="return confirm('Delete this route?');">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+        Delete
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="stats-grid" style="margin-bottom:20px;">
+  <div class="stat-card" style="--stat-color: var(--cyan);">
+    <div class="stat-label">Distance</div>
+    <div class="stat-value">{{ route.total_distance_km }}</div>
+    <div class="stat-sub">kilometers</div>
+  </div>
+  <div class="stat-card" style="--stat-color: var(--orange);">
+    <div class="stat-label">Duration</div>
+    <div class="stat-value">{{ route.estimated_duration_mins }}</div>
+    <div class="stat-sub">minutes total</div>
+  </div>
+  <div class="stat-card" style="--stat-color: var(--green);">
+    <div class="stat-label">Fuel Saved</div>
+    <div class="stat-value">{{ route.fuel_savings_pct }}%</div>
+    <div class="stat-sub">vs. unoptimized</div>
+  </div>
+  <div class="stat-card" style="--stat-color: var(--red);">
+    <div class="stat-label">Stops</div>
+    <div class="stat-value">{{ route.stop_count }}</div>
+    <div class="stat-sub">service locations</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;">
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="route-map"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        Stop Sequence
+      </span>
+    </div>
+
+    <div class="stop-list">
+      {% for stop in stops %}
+      <div class="stop-row">
+        <div class="stop-num">{{ stop.stop_order }}</div>
+        <div style="flex:1;">
+          <div class="stop-name">{{ stop.job.customer_name }}</div>
+          <div class="stop-addr">{{ stop.job.address }}</div>
+          <div class="stop-tags">
+            <span class="badge badge-{{ stop.job.priority }}">{{ stop.job.get_priority_display }}</span>
+            <span class="badge badge-{{ stop.job.status }}">{{ stop.job.get_status_display }}</span>
+            {% if stop.job.time_window_start %}
+            <span style="font-size:11px;color:var(--text-2);">{{ stop.job.time_window_start|time:"H:i" }}–{{ stop.job.time_window_end|time:"H:i" }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <a href="{% url 'job_edit' stop.job.pk %}" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Edit</a>
+      </div>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text-2);">No stops recorded.</p>
+      {% endfor %}
+    </div>
+
+    {% if route.driver %}
+    <hr class="divider">
+    <div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:6px;">Assigned Driver</div>
+      <div style="font-weight:600;font-size:14px;">{{ route.driver.name }}</div>
+      <div style="font-size:12px;color:var(--text-2);">{{ route.driver.get_vehicle_type_display }}{% if route.driver.phone %} &middot; {{ route.driver.phone }}{% endif %}</div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const waypoints = {{ waypoints_json|safe }};
+
+const map = L.map('route-map').setView([39.5, -98.35], 4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; Carto',
+  maxZoom: 18
+}).addTo(map);
+
+const colors = { high: '#f5365c', normal: '#00cfff', low: '#00e57a' };
+const markers = [];
+
+// Place numbered stop markers
+waypoints.forEach((wp, idx) => {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="
+      width:26px; height:26px; border-radius:50%;
+      background:${colors[wp.priority]};
+      border:1.5px solid rgba(255,255,255,0.35);
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:700; color:#07090f;
+      font-family:monospace;
+      box-shadow:0 2px 12px ${colors[wp.priority]}60;
+    ">${idx + 1}</div>`,
+    iconSize: [26, 26], iconAnchor: [13, 13]
+  });
+
+  const m = L.marker([wp.lat, wp.lng], { icon }).addTo(map)
+    .bindPopup(`
+      <div style="font-family:system-ui;min-width:170px;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:3px;">${wp.label}</div>
+        <div style="font-size:11px;color:#8899aa;">${wp.address}</div>
+      </div>
+    `);
+  markers.push(m);
+});
+
+// Fit map to markers first
+if (markers.length > 0) {
+  map.fitBounds(L.featureGroup(markers).getBounds().pad(0.22));
+}
+
+// Fetch real road geometry from OSRM and draw it
+async function drawRoadRoute() {
+  if (waypoints.length < 2) return;
+
+  // OSRM expects coordinates as lng,lat pairs separated by semicolons
+  const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+  let routeLine = null;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+      const geojson = data.routes[0].geometry;
+
+      // Draw the road-following route
+      routeLine = L.geoJSON(geojson, {
+        style: {
+          color: '#00cfff',
+          weight: 3,
+          opacity: 0.85,
+        }
+      }).addTo(map);
+
+    } else {
+      fallbackStraightLine();
+    }
+  } catch (e) {
+    // OSRM unavailable — fall back to straight lines
+    fallbackStraightLine();
+  }
+}
+
+function fallbackStraightLine() {
+  const latlngs = waypoints.map(w => [w.lat, w.lng]);
+  L.polyline(latlngs, {
+    color: '#00cfff',
+    weight: 2.5,
+    opacity: 0.7,
+    dashArray: '6 5'
+  }).addTo(map);
+}
+
+drawRoadRoute();
+</script>
+{% endblock %}

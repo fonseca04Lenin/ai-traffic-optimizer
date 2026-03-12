@@ -1,0 +1,110 @@
+{% extends 'optimizer/base.html' %}
+{% block title %}Jobs{% endblock %}
+{% block page_title %}Jobs{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Job Queue</h1>
+    <div class="sub">All service stops across your fleet</div>
+  </div>
+  <a href="{% url 'job_create' %}" class="btn btn-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Job
+  </a>
+</div>
+
+<form method="get" class="filter-bar">
+  <select name="priority" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Priorities</option>
+    <option value="high"   {% if filter_priority == 'high' %}selected{% endif %}>High</option>
+    <option value="normal" {% if filter_priority == 'normal' %}selected{% endif %}>Normal</option>
+    <option value="low"    {% if filter_priority == 'low' %}selected{% endif %}>Low</option>
+  </select>
+  <select name="status" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Statuses</option>
+    <option value="pending"     {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+    <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+    <option value="completed"   {% if filter_status == 'completed' %}selected{% endif %}>Completed</option>
+  </select>
+  <select name="driver" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Drivers</option>
+    {% for d in drivers %}
+    <option value="{{ d.pk }}" {% if filter_driver == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+    {% endfor %}
+  </select>
+  {% if filter_priority or filter_status or filter_driver %}
+  <a href="{% url 'job_list' %}" class="btn btn-ghost btn-sm">Clear filters</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  {% if jobs %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Address</th>
+          <th>Service</th>
+          <th>Priority</th>
+          <th>Window</th>
+          <th>Driver</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr class="row-{{ job.priority }}">
+          <td>
+            <div style="font-weight:600;">{{ job.customer_name }}</div>
+            {% if not job.has_coords %}
+            <div class="no-gps-warn" style="font-size:11px;margin-top:1px;">No GPS — add coordinates</div>
+            {% endif %}
+          </td>
+          <td class="mono" style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ job.address }}</td>
+          <td class="muted">{{ job.get_service_type_display }}</td>
+          <td><span class="badge badge-{{ job.priority }}">{{ job.get_priority_display }}</span></td>
+          <td class="muted">
+            {% if job.time_window_start %}{{ job.time_window_start|time:"H:i" }} – {{ job.time_window_end|time:"H:i" }}{% else %}—{% endif %}
+          </td>
+          <td class="muted">{{ job.driver.name|default:"—" }}</td>
+          <td>
+            <form method="post" action="{% url 'job_status_update' job.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <select name="status" class="filter-select" onchange="this.form.submit()" style="padding:4px 8px;font-size:12px;">
+                {% for val, label in job.STATUS_CHOICES %}
+                <option value="{{ val }}" {% if job.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'job_edit' job.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+              <form method="post" action="{% url 'job_delete' job.pk %}" onsubmit="return confirm('Delete this job?');" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/></svg>
+    </div>
+    <p>No jobs match your filters. <a href="{% url 'job_create' %}">Create a job</a> or <a href="{% url 'job_list' %}">clear filters</a>.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
