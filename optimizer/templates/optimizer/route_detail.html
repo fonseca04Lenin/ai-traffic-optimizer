@@ -110,7 +110,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 18
 }).addTo(map);
 
-const colors = { high: '#f5365c', normal: '#00cfff', low: '#00e57a' };
+const colors = { high: '#e05252', normal: '#a87ef5', low: '#34c78c' };
 const markers = [];
 
 // Place numbered stop markers
@@ -164,7 +164,7 @@ async function drawRoadRoute() {
       // Draw the road-following route
       routeLine = L.geoJSON(geojson, {
         style: {
-          color: '#00cfff',
+          color: '#a87ef5',
           weight: 3,
           opacity: 0.85,
         }
@@ -182,7 +182,7 @@ async function drawRoadRoute() {
 function fallbackStraightLine() {
   const latlngs = waypoints.map(w => [w.lat, w.lng]);
   L.polyline(latlngs, {
-    color: '#00cfff',
+    color: '#a87ef5',
     weight: 2.5,
     opacity: 0.7,
     dashArray: '6 5'
@@ -192,7 +192,7 @@ function fallbackStraightLine() {
   const notice = L.control({ position: 'bottomleft' });
   notice.onAdd = () => {
     const div = L.DomUtil.create('div');
-    div.innerHTML = '<div style="background:rgba(7,9,15,0.82);border:1px solid rgba(245,54,92,0.45);color:#f5365c;font-size:11px;padding:5px 9px;border-radius:6px;font-family:system-ui;backdrop-filter:blur(4px);">&#9888; Straight-line preview — road routing unavailable</div>';
+    div.innerHTML = '<div style="background:rgba(13,12,15,0.85);border:1px solid rgba(224,82,82,0.45);color:#e05252;font-size:11px;padding:5px 9px;border-radius:6px;font-family:system-ui;backdrop-filter:blur(4px);">&#9888; Straight-line preview — road routing unavailable</div>';
     return div;
   };
   notice.addTo(map);

@@ -89,3 +89,5 @@ This is a functional prototype. It covers the core loop but there's a real gap b
 **Production deployment hardening** — `DEBUG = True` is still on, `SECRET_KEY` is hardcoded in settings, and SQLite isn't appropriate for anything beyond one machine. For a real deployment you'd swap in PostgreSQL, move secrets to environment variables, add `ALLOWED_HOSTS`, run behind gunicorn, and set up static file serving (whitenoise or S3).
 
 **Geocoding reliability** — Nominatim has rate limits and occasionally returns wrong coordinates for ambiguous addresses. A fallback to a paid geocoder (Geocodio is cheap and US-focused) would make address entry more reliable for production use.
+
+**Final Thoughts** - Overall i learned a lot when it came to this prohject my next goal shoudl be to integrate apis such as google maps and those that have real time data. Authentication will also be added to amke a product for users rather than to those who are develoeprs and know how to set up the project. This demo was done to test initial goals, what think what else i could build with it.

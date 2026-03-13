@@ -1,36 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 /* ─── Design tokens ──────────────────────────────────────────────────────── */
 :root {
-  --bg:           #07090f;
-  --bg-surface:   #0d1117;
-  --bg-elevated:  #131920;
-  --bg-hover:     #1a2232;
+  --bg:           #0d0c0f;
+  --bg-surface:   #141216;
+  --bg-elevated:  #1c1a20;
+  --bg-hover:     #231f29;
 
   --border:       rgba(255,255,255,0.07);
-  --border-focus: rgba(0,207,255,0.45);
+  --border-focus: rgba(168,139,250,0.5);
 
-  --cyan:         #00cfff;
-  --cyan-soft:    rgba(0,207,255,0.10);
-  --cyan-mid:     rgba(0,207,255,0.20);
-  --green:        #00e57a;
-  --green-soft:   rgba(0,229,122,0.10);
-  --orange:       #f5a623;
-  --orange-soft:  rgba(245,166,35,0.12);
-  --red:          #f5365c;
-  --red-soft:     rgba(245,54,92,0.10);
+  --cyan:         #a87ef5;
+  --cyan-soft:    rgba(168,126,245,0.10);
+  --cyan-mid:     rgba(168,126,245,0.20);
+  --green:        #34c78c;
+  --green-soft:   rgba(52,199,140,0.10);
+  --orange:       #e9914a;
+  --orange-soft:  rgba(233,145,74,0.12);
+  --red:          #e05252;
+  --red-soft:     rgba(224,82,82,0.10);
 
-  --text:         #e1e8f0;
-  --text-2:       #8899aa;
-  --text-3:       #3d5166;
+  --text:         #e4dff0;
+  --text-2:       #8a8096;
+  --text-3:       #4a4256;
 
-  --font:         'Inter', system-ui, sans-serif;
-  --mono:         'JetBrains Mono', monospace;
+  --font:         'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono:         'IBM Plex Mono', monospace;
   --sidebar-w:    240px;
   --radius-sm:    6px;
   --radius:       10px;
   --radius-lg:    14px;
-  --shadow:       0 4px 24px rgba(0,0,0,0.5);
+  --shadow:       0 4px 24px rgba(0,0,0,0.55);
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────── */
@@ -178,7 +178,7 @@ body {
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   background: var(--cyan);
-  color: #07090f;
+  color: #0d0c0f;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -494,12 +494,12 @@ td.muted { color: var(--text-2); font-size: 12px; }
 
 .btn-primary {
   background: var(--cyan);
-  color: #07090f;
+  color: #0d0c0f;
   border-color: var(--cyan);
 }
 .btn-primary:hover {
-  background: #19d9ff;
-  box-shadow: 0 0 20px rgba(0,207,255,0.35);
+  background: #be9df7;
+  box-shadow: 0 0 20px rgba(168,126,245,0.35);
 }
 
 .btn-ghost {
