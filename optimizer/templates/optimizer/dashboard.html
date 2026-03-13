@@ -158,7 +158,7 @@
       <div style="padding:8px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
           <a href="{% url 'route_detail' route.pk %}" style="font-size:13px;font-weight:600;color:var(--cyan);text-decoration:none;">{{ route.name|default:route }}</a>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">{{ route.total_distance_km }} km</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">{{ route.total_distance_km }} mi</span>
         </div>
         <div style="font-size:11px;color:var(--text-2);margin-top:2px;">
           {{ route.stop_count }} stops &middot; {{ route.estimated_duration_mins }} min

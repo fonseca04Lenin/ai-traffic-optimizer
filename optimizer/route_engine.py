@@ -11,14 +11,13 @@ import networkx as nx
 
 
 PRIORITY_WEIGHT = {'high': 0.5, 'normal': 1.0, 'low': 1.6}
-AVG_SPEED_KMH = 40.0       # average city driving speed
-MINS_PER_STOP = 12         # service time per stop
-FUEL_L_PER_KM = 0.08       # liters consumed per km (light van)
+AVG_SPEED_MPH  = 25.0   # average city driving speed
+MINS_PER_STOP  = 12     # service time per stop
 
 
 def haversine(lat1, lon1, lat2, lon2):
-    """Great-circle distance between two GPS coordinates (km)."""
-    R = 6371.0
+    """Great-circle distance between two GPS coordinates (miles)."""
+    R = 3958.8
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = (math.sin(dlat / 2) ** 2
@@ -49,7 +48,7 @@ def optimize_route(jobs, depot_lat=None, depot_lng=None):
 
     Returns:
         ordered_jobs  – jobs in optimized visit order
-        total_km      – total route distance
+        total_miles   – total route distance in miles
         duration_mins – estimated total time including stop time
         savings_pct   – % distance saved vs naive sequential order
     """
@@ -87,24 +86,24 @@ def optimize_route(jobs, depot_lat=None, depot_lng=None):
         cur_lng = job_map[best_id].longitude
 
     # Total optimized distance
-    total_km = 0.0
+    total_miles = 0.0
     if depot_lat is not None and ordered:
-        total_km += haversine(depot_lat, depot_lng, ordered[0].latitude, ordered[0].longitude)
+        total_miles += haversine(depot_lat, depot_lng, ordered[0].latitude, ordered[0].longitude)
     for i in range(len(ordered) - 1):
         a, b = ordered[i], ordered[i + 1]
-        total_km += haversine(a.latitude, a.longitude, b.latitude, b.longitude)
+        total_miles += haversine(a.latitude, a.longitude, b.latitude, b.longitude)
 
     # Naive distance: jobs in original creation order
-    naive_km = 0.0
+    naive_miles = 0.0
     naive = [j for j in jobs if j.has_coords()]
     for i in range(len(naive) - 1):
-        naive_km += haversine(naive[i].latitude, naive[i].longitude,
-                              naive[i + 1].latitude, naive[i + 1].longitude)
+        naive_miles += haversine(naive[i].latitude, naive[i].longitude,
+                                 naive[i + 1].latitude, naive[i + 1].longitude)
 
     savings_pct = 0.0
-    if naive_km > 0 and total_km < naive_km:
-        savings_pct = (naive_km - total_km) / naive_km * 100
+    if naive_miles > 0 and total_miles < naive_miles:
+        savings_pct = (naive_miles - total_miles) / naive_miles * 100
 
-    duration_mins = int((total_km / AVG_SPEED_KMH) * 60) + len(ordered) * MINS_PER_STOP
+    duration_mins = int((total_miles / AVG_SPEED_MPH) * 60) + len(ordered) * MINS_PER_STOP
 
-    return ordered, round(total_km, 2), duration_mins, round(savings_pct, 1)
+    return ordered, round(total_miles, 2), duration_mins, round(savings_pct, 1)

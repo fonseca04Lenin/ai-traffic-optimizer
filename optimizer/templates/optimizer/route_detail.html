@@ -8,7 +8,7 @@
   <div>
     <h1>{{ route.name|default:route }}</h1>
     <div class="sub">
-      {{ route.stop_count }} stops &middot; {{ route.total_distance_km }} km &middot; {{ route.estimated_duration_mins }} min
+      {{ route.stop_count }} stops &middot; {{ route.total_distance_km }} mi &middot; {{ route.estimated_duration_mins }} min
       {% if route.driver %} &middot; {{ route.driver.name }}{% endif %}
     </div>
   </div>
@@ -31,7 +31,7 @@
   <div class="stat-card" style="--stat-color: var(--cyan);">
     <div class="stat-label">Distance</div>
     <div class="stat-value">{{ route.total_distance_km }}</div>
-    <div class="stat-sub">kilometers</div>
+    <div class="stat-sub">miles</div>
   </div>
   <div class="stat-card" style="--stat-color: var(--orange);">
     <div class="stat-label">Duration</div>
