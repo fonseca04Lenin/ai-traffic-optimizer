@@ -25,7 +25,7 @@ class JobAdmin(admin.ModelAdmin):
 
 @admin.register(Route)
 class RouteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'driver', 'stop_count', 'total_distance_km', 'estimated_duration_mins', 'created_at')
+    list_display = ('name', 'driver', 'stop_count', 'total_distance_mi', 'estimated_duration_mins', 'created_at')
     inlines = [RouteStopInline]
 
     def stop_count(self, obj):

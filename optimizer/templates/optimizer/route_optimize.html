@@ -151,7 +151,8 @@ document.getElementById('sel-none').addEventListener('click', () => {
 document.getElementById('sel-high').addEventListener('click', () => {
   document.querySelectorAll('#job-checklist .check-list-item').forEach(item => {
     const cb = item.querySelector('input[type=checkbox]');
-    cb.checked = item.textContent.includes('High');
+    // Check the badge class, not the text, to avoid matching customer names
+    cb.checked = !!item.querySelector('.badge-high');
   });
 });
 </script>

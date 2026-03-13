@@ -140,15 +140,15 @@ JOBS = [
         'service_type': 'repair', 'priority': 'low', 'status': 'completed',
     },
     {
-        'customer_name': 'Kiewit Building — UNO',
-        'address': '6001 Dodge St, Omaha, NE 68182',
-        'lat': 41.2553, 'lng': -96.0019,
+        'customer_name': 'Peter Kiewit Institute — UNO',
+        'address': '1110 S 67th St, Omaha, NE 68182',
+        'lat': 41.2436, 'lng': -96.0297,
         'service_type': 'delivery', 'priority': 'high', 'status': 'pending',
     },
     {
         'customer_name': 'University Village Dorms — UNO',
-        'address': '1001 University Dr N, Omaha, NE 68182',
-        'lat': 41.2608, 'lng': -95.9947,
+        'address': '6506 University Drive South, Omaha, NE 68182',
+        'lat': 41.2493, 'lng': -96.0051,
         'service_type': 'delivery', 'priority': 'normal', 'status': 'pending',
     },
 ]

@@ -175,14 +175,14 @@ def route_optimize(request):
         route = Route.objects.create(
             name=name,
             driver=driver,
-            total_distance_km=total_km,
+            total_distance_mi=total_km,
             estimated_duration_mins=duration_mins,
             fuel_savings_pct=savings_pct,
         )
         for i, job in enumerate(ordered, start=1):
             RouteStop.objects.create(route=route, job=job, stop_order=i)
 
-        messages.success(request, f"Route optimized — {len(ordered)} stops, {total_km} km.")
+        messages.success(request, f"Route optimized — {len(ordered)} stops, {total_km} mi.")
         return redirect('route_detail', pk=route.pk)
 
     pending_jobs = Job.objects.filter(status='pending').select_related('driver')

@@ -8,7 +8,7 @@
   <div>
     <h1>{{ route.name|default:route }}</h1>
     <div class="sub">
-      {{ route.stop_count }} stops &middot; {{ route.total_distance_km }} mi &middot; {{ route.estimated_duration_mins }} min
+      {{ route.stop_count }} stops &middot; {{ route.total_distance_mi }} mi &middot; {{ route.estimated_duration_mins }} min
       {% if route.driver %} &middot; {{ route.driver.name }}{% endif %}
     </div>
   </div>
@@ -30,7 +30,7 @@
 <div class="stats-grid" style="margin-bottom:20px;">
   <div class="stat-card" style="--stat-color: var(--cyan);">
     <div class="stat-label">Distance</div>
-    <div class="stat-value">{{ route.total_distance_km }}</div>
+    <div class="stat-value">{{ route.total_distance_mi }}</div>
     <div class="stat-sub">miles</div>
   </div>
   <div class="stat-card" style="--stat-color: var(--orange);">
@@ -187,6 +187,15 @@ function fallbackStraightLine() {
     opacity: 0.7,
     dashArray: '6 5'
   }).addTo(map);
+
+  // Show a small notice so users know road-following data wasn't available
+  const notice = L.control({ position: 'bottomleft' });
+  notice.onAdd = () => {
+    const div = L.DomUtil.create('div');
+    div.innerHTML = '<div style="background:rgba(7,9,15,0.82);border:1px solid rgba(245,54,92,0.45);color:#f5365c;font-size:11px;padding:5px 9px;border-radius:6px;font-family:system-ui;backdrop-filter:blur(4px);">&#9888; Straight-line preview — road routing unavailable</div>';
+    return div;
+  };
+  notice.addTo(map);
 }
 
 drawRoadRoute();

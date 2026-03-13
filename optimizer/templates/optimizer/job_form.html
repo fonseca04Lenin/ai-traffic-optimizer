@@ -111,23 +111,35 @@
 {% block extra_js %}
 <script>
 document.getElementById('geocode-btn').addEventListener('click', function() {
-  const addr = document.getElementById('{{ form.address.id_for_label }}').value.trim();
+  const btn   = this;
   const label = document.getElementById('geocode-label');
-  if (!addr) { label.textContent = 'Enter an address first'; setTimeout(() => label.textContent = 'Locate on map', 2000); return; }
+  const addr  = document.getElementById('{{ form.address.id_for_label }}').value.trim();
+
+  if (!addr) {
+    label.textContent = 'Enter an address first';
+    setTimeout(() => label.textContent = 'Locate on map', 2000);
+    return;
+  }
+
+  btn.disabled = true;
   label.textContent = 'Locating...';
+
   fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`)
     .then(r => r.json())
     .then(data => {
       if (data && data.length > 0) {
-        document.getElementById('{{ form.latitude.id_for_label }}').value = parseFloat(data[0].lat).toFixed(6);
+        document.getElementById('{{ form.latitude.id_for_label }}').value  = parseFloat(data[0].lat).toFixed(6);
         document.getElementById('{{ form.longitude.id_for_label }}').value = parseFloat(data[0].lon).toFixed(6);
         label.textContent = 'Located';
       } else {
         label.textContent = 'Address not found';
       }
-      setTimeout(() => label.textContent = 'Locate on map', 2500);
     })
-    .catch(() => { label.textContent = 'Error — try again'; setTimeout(() => label.textContent = 'Locate on map', 2500); });
+    .catch(() => { label.textContent = 'Error — try again'; })
+    .finally(() => {
+      btn.disabled = false;
+      setTimeout(() => label.textContent = 'Locate on map', 2500);
+    });
 });
 </script>
 {% endblock %}

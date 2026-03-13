@@ -86,7 +86,7 @@ class Route(models.Model):
     )
     jobs = models.ManyToManyField(Job, through='RouteStop', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    total_distance_km = models.FloatField(default=0.0)
+    total_distance_mi = models.FloatField(default=0.0)
     estimated_duration_mins = models.IntegerField(default=0)
     fuel_savings_pct = models.FloatField(default=0.0)
 
@@ -99,12 +99,12 @@ class Route(models.Model):
     def stop_count(self):
         return self.routestop_set.count()
 
-    def fuel_saved_liters(self):
-        if self.fuel_savings_pct <= 0 or self.total_distance_km <= 0:
+    def fuel_saved_gallons(self):
+        if self.fuel_savings_pct <= 0 or self.total_distance_mi <= 0:
             return 0.0
-        base_km = self.total_distance_km / max(1 - self.fuel_savings_pct / 100, 0.01)
-        saved_km = base_km - self.total_distance_km
-        return round(saved_km * 0.08, 2)
+        base_mi = self.total_distance_mi / max(1 - self.fuel_savings_pct / 100, 0.01)
+        saved_mi = base_mi - self.total_distance_mi
+        return round(saved_mi * 0.05, 2)  # ~0.05 gal/mi for a light van
 
 
 class RouteStop(models.Model):
